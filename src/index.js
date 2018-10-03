@@ -4,7 +4,8 @@ import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 
-import {createStore} from 'redux';
+import logger from 'redux-logger';
+import {applyMiddleware, createStore} from 'redux';
 
 const initialState = {
   count: 1,
@@ -35,7 +36,8 @@ const reducer = (state = initialState, action) => {
   }
 };
 
-const store = createStore(reducer);
+const middleware = applyMiddleware(logger);
+const store = createStore(reducer, middleware);
 
 store.subscribe(() => {
   console.log('store updated!', store.getState());
