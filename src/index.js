@@ -4,58 +4,40 @@ import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 
-import logger from 'redux-logger';
 import {applyMiddleware, createStore} from 'redux';
+import logger from 'redux-logger';
+import thunk from 'redux-thunk';
+import axios from 'axios';
 
 const initialState = {
-  count: 1,
-  values: []
+  fetching: false,
+  fetched: false,
+  users: [],
+  error: null
 };
 
 const reducer = (state = initialState, action) => {
   switch (action.type) {
-    case 'ADD':/*bu şekilde immutable değişken sağlıyoruz, yani memory deki değişken alınır değiştirilir ve yeniden gönderilir, üzerine yazılarak sadece son state durumuna sahip olma problemini giderir*/
-      //return Object.assign({}, state, {count: state.count + action.payload});/*bu şekilde de kullanılabilir */
-
-      // state.values.push(action.payload);//   -> hatalı
-      return {
-        ...state,
-        count: state.count + action.payload,
-        values: [...state.values, action.payload]//bu şekilde state e direkt olarak erişilmez ve üzerine yazma yapılmaz, redux için önemli! (immutable state)
-      };
-    case 'SUBTRACT':
-      state.values.push(action.payload);
-      return {
-        ...state,
-        ...state,
-        count: state.count - action.payload,
-        values: [...state.values, action.payload]
-      };
+    case 'FETCH_USERS_START':
+      return {...state, fetching: true};
+    case 'FETCH_USERS_ERROR':
+      return {...state, fetching: false, error: action.payload};
+    case 'RECEIVE_USERS':
+      return {...state, fetching: false, fetched: true, users: action.payload};
     default:
       return state;
   }
 };
 
-const middleware = applyMiddleware(logger);
+const middleware = applyMiddleware(thunk, logger);
 const store = createStore(reducer, middleware);
 
-store.subscribe(() => {
-  console.log('store updated!', store.getState());
-});
+store.dispatch(dispatch => {
+  dispatch({type: 'FETCH_USERS_START'});
 
-store.dispatch({
-  type: 'ADD',
-  payload: 1
-});
-
-store.dispatch({
-  type: 'ADD',
-  payload: 10
-});
-
-store.dispatch({
-  type: 'SUBTRACT',
-  payload: 5
+  axios.get('https://jsonplaceholder.typicode.com/users').then(res => res.data)
+    .then(users => dispatch({type: 'RECEIVE_USERS', payload: users}))
+    .catch(error => dispatch({type: 'FETCH_USERS_ERROR', payload: error}));
 });
 
 ReactDOM.render(<App/>, document.getElementById('root'));
