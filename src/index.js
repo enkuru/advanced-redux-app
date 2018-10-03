@@ -8,22 +8,27 @@ import {createStore} from 'redux';
 
 const initialState = {
   count: 1,
-  users: []
+  values: []
 };
 
 const reducer = (state = initialState, action) => {
   switch (action.type) {
-    case 'ADD':/*bu şekilde mutable değişken sağlıyoruz, yani memory deki değişken alınır değiştirilir ve yeniden gönderilir, üzerine yazılarak sadece son state durumuna sahip olma problemini giderir*/
-      /*return {
-        ...state,
-        count: state.count + action.payload
-      };*/
+    case 'ADD':/*bu şekilde immutable değişken sağlıyoruz, yani memory deki değişken alınır değiştirilir ve yeniden gönderilir, üzerine yazılarak sadece son state durumuna sahip olma problemini giderir*/
+      //return Object.assign({}, state, {count: state.count + action.payload});/*bu şekilde de kullanılabilir */
 
-      return Object.assign({}, state, {count: state.count + action.payload});/*bu şekilde de kullanılabilir */
-    case 'SUBTRACT':
+      // state.values.push(action.payload);//   -> hatalı
       return {
         ...state,
-        count: state.count - action.payload
+        count: state.count + action.payload,
+        values: [...state.values, action.payload]//bu şekilde state e direkt olarak erişilmez ve üzerine yazma yapılmaz, redux için önemli! (immutable state)
+      };
+    case 'SUBTRACT':
+      state.values.push(action.payload);
+      return {
+        ...state,
+        ...state,
+        count: state.count - action.payload,
+        values: [...state.values, action.payload]
       };
     default:
       return state;
